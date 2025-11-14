@@ -104,6 +104,26 @@ BOOL CSAGEFaceDlg::OnInitDialog()
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
+BOOL CSAGEFaceDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+		if (ctrlDown && pMsg->wParam == 'A')
+		{
+			AfxMessageBox(_T("Ctrl + A 눌림"));
+
+			cv::Mat temp = cv::imread("sample.bmp");
+			cv::imshow("test sample", temp);
+
+			return TRUE;
+		}
+	}
+
+	// 나머지는 기본 동작
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
 void CSAGEFaceDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -132,8 +152,10 @@ void CSAGEFaceDlg::OnPaint()
 		// 클라이언트 사각형에서 아이콘을 가운데에 맞춥니다.
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
+
 		CRect rect;
 		GetClientRect(&rect);
+		
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 

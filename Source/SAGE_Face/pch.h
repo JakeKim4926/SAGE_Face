@@ -10,4 +10,24 @@
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
 
+#include <string>
+#include <thread>
+#include <algorithm>
+#include <vector>
+
+//----------------------------------------------------------------------------------------------
+// Opencv v4.11
+//----------------------------------------------------------------------------------------------
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+
+#ifdef DEBUG
+	#pragma comment(lib, "../Lib/Opencv/opencv_world4110d.lib")
+#else
+	#pragma comment(lib, "../Lib/Opencv/opencv_world4110.lib")
+#endif
+
 #endif //PCH_H
