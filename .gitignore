@@ -1,41 +1,89 @@
-# Prerequisites
-*.d
+########################
+# Visual Studio 공통
+########################
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# VS 설정/캐시
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# 데이터베이스/인덱스
+*.VC.db
+*.opendb
+ipch/
+
+########################
+# 빌드 결과 (Debug/Release 등)
+########################
+
+# 모든 경로의 Debug/Release, x64/x86 폴더
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# 공통 bin/obj
+[Bb]in/
+[Oo]bj/
+
+# 로그/임시
+[Ll]og/
+[Tt]emp/
+*.log
+
+########################
+# C++ / MFC 산출물
+########################
+
 *.obj
-
-# Precompiled Headers
-*.gch
 *.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
 *.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.idb
+*.ilk
+*.exp
 *.lib
-
-# Executables
 *.exe
-*.out
-*.app
+*.dll
+*.tlb
+*.tli
+*.tlh
+*.bak
+*.cache
+*.tlog
+*.lastbuildstate
 
-# debug information files
-*.dwo
+# 자동 생성 리소스
+*.aps
+*.res
+
+########################
+# 프로젝트/설정 파일
+########################
+
+# 사용자별 설정(공유 불필요)
+*.vcxproj.user
+*.vcproj.*.user
+*.sdf
+*.opensdf
+
+########################
+# 기타
+########################
+
+# NuGet 패키지
+packages/
+*.nupkg
+
+# 임시 파일
+*.tmp
+~$*
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
