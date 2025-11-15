@@ -13,36 +13,69 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\Default">
+      <UniqueIdentifier>{e3e13eaa-857d-4ad9-89bc-38d0120d7fc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Dlg">
+      <UniqueIdentifier>{7127cd3c-6ecd-4c5f-900b-6f872747fcb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Default">
+      <UniqueIdentifier>{bac44548-29f1-44f5-a261-2c88bc4a4d4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Dlg">
+      <UniqueIdentifier>{6322a4cf-d2bb-4b5f-949e-39aa83660e10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\CV">
+      <UniqueIdentifier>{b2508393-6f32-487e-b3a2-5c62dd5b464d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\CV">
+      <UniqueIdentifier>{149b9613-5d33-42ef-9881-68e428cca19c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SAGE_Face.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="SAGE_FaceDlg.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="framework.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\Default</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
+      <Filter>헤더 파일\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>헤더 파일\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="SAGE_Face.h">
+      <Filter>헤더 파일\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>헤더 파일\Default</Filter>
+    </ClInclude>
+    <ClInclude Include="SAGE_FaceDlg.h">
+      <Filter>헤더 파일\Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="CVUtils.h">
+      <Filter>헤더 파일\CV</Filter>
+    </ClInclude>
+    <ClInclude Include="Cam.h">
+      <Filter>헤더 파일\CV</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일\Default</Filter>
+    </ClCompile>
     <ClCompile Include="SAGE_Face.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Default</Filter>
     </ClCompile>
     <ClCompile Include="SAGE_FaceDlg.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Dlg</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="CVUtils.cpp">
+      <Filter>소스 파일\CV</Filter>
+    </ClCompile>
+    <ClCompile Include="Cam.cpp">
+      <Filter>소스 파일\CV</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
