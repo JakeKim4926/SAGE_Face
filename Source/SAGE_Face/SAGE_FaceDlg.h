@@ -20,16 +20,30 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
 
-
 // 구현입니다.
 protected:
-	HICON m_hIcon;
+	CWinThread*		 m_pGrabThread = nullptr;
+	BOOL			 m_bGrabRun = FALSE;
+					 
+	CStatic			 m_picCam;
+	Cam				 m_cam;
+	
+	cv::Mat			 m_frame;
+	CCriticalSection m_csFrame;
+
+protected:
+	static UINT		GrabThreadProc(LPVOID pParam);
+	afx_msg LRESULT OnUpdateFrame(WPARAM wParam, LPARAM lParam);
+	void			DrawMatToPicture(const cv::Mat& mat);
+
 
 	// 생성된 메시지 맵 함수
 	virtual BOOL OnInitDialog();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	
+	afx_msg void OnDestroy();
 };

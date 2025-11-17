@@ -49,76 +49,140 @@ END_MESSAGE_MAP()
 
 CSAGEFaceDlg::CSAGEFaceDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SAGE_FACE_DIALOG, pParent) {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CSAGEFaceDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_STATIC_CAM, m_picCam);
 }
 
 BEGIN_MESSAGE_MAP(CSAGEFaceDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+
+	ON_MESSAGE(WM_UPDATE_FRAME, &CSAGEFaceDlg::OnUpdateFrame)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
 // CSAGEFaceDlg 메시지 처리기
 
+
 BOOL CSAGEFaceDlg::OnInitDialog() {
 	CDialogEx::OnInitDialog();
 
-	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
-
-	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
-
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != nullptr) {
-		BOOL bNameValid;
-		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
-		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty()) {
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
+	bool bOpen = m_cam.Open(0, CAM_WIDTH, CAM_HEIGHT, CAM_FPS);
+	if (!bOpen) {
+		AfxMessageBox(_T("Failed to connect cam"));
+	} else {
+		m_bGrabRun = TRUE;
+		m_pGrabThread = AfxBeginThread(GrabThreadProc, this);
 	}
 
-	// 이 대화 상자의 아이콘을 설정합니다.  응용 프로그램의 주 창이 대화 상자가 아닐 경우에는
-	//  프레임워크가 이 작업을 자동으로 수행합니다.
-	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
-	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
-	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-
-	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
+	return TRUE;
 }
+
+UINT CSAGEFaceDlg::GrabThreadProc(LPVOID pParam) {
+	auto* pDlg = reinterpret_cast<CSAGEFaceDlg*>(pParam);
+	cv::Mat localFrame;
+
+	while (pDlg->m_bGrabRun) {
+		if (!pDlg->m_cam.GrabFrame(localFrame)) {
+			break;
+		}
+
+		if (localFrame.empty()) {
+			continue;
+		}
+
+		//pDlg->m_csFrame.Lock();
+		//localFrame.copyTo(pDlg->m_frame);
+		//pDlg->m_csFrame.Unlock();
+		{
+			CSingleLock lock(&pDlg->m_csFrame, TRUE);
+			localFrame.copyTo(pDlg->m_frame);
+		}
+
+		pDlg->PostMessage(WM_UPDATE_FRAME, 0, 0);
+
+		Sleep(1);
+	}
+
+	return 0;
+}
+
+void CSAGEFaceDlg::DrawMatToPicture(const cv::Mat& mat) {
+	if (mat.empty())
+		return;
+
+	CRect rect;
+	m_picCam.GetClientRect(&rect);
+	int dstW = rect.Width();
+	int dstH = rect.Height();
+
+	CClientDC dc(&m_picCam);
+
+	BITMAPINFO bmi;
+	ZeroMemory(&bmi, sizeof(bmi));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = mat.cols;
+	bmi.bmiHeader.biHeight = -mat.rows;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 24;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	StretchDIBits(
+		dc.GetSafeHdc(),
+		0, 0, dstW, dstH,
+		0, 0, mat.cols, mat.rows,
+		mat.data,
+		&bmi,
+		DIB_RGB_COLORS,
+		SRCCOPY
+	);
+}
+
+LRESULT CSAGEFaceDlg::OnUpdateFrame(WPARAM wParam, LPARAM lParam) {
+	cv::Mat frameCopy;
+
+	{
+		CSingleLock lock(&m_csFrame, TRUE);
+		if (m_frame.empty())
+			return 0;
+		m_frame.copyTo(frameCopy);
+	}
+
+	//int type = frameCopy.type();
+	//int depth = type & CV_MAT_DEPTH_MASK;
+	//int channels = 1 + (type >> CV_CN_SHIFT);
+	//TRACE("frameCopy type=%d, depth=%d, channels=%d, size=%d x %d\n",
+	//	type, depth, channels, frameCopy.cols, frameCopy.rows);
+
+
+	DrawMatToPicture(frameCopy);
+	return 0;
+}
+
 
 BOOL CSAGEFaceDlg::PreTranslateMessage(MSG* pMsg) {
 	if (pMsg->message == WM_KEYDOWN) {
 		bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 		if (ctrlDown) {
 			if (pMsg->wParam == 'A') {
+				// OPENCV TEST
 				cv::Mat temp = cv::imread("sample.bmp");
 				cv::imshow("test sample", temp);
 			} else if (pMsg->wParam == 'S') {
+				// CAM TEST
 				Cam cam;
-				bool bResult = cam.Open(0, 720, 480, 1);
+				bool bResult = cam.Open(0, CAM_WIDTH, CAM_HEIGHT, CAM_FPS);
 
 				if (!bResult)
 					return TRUE;
 
-				cv::Mat temp;
-				bResult = cam.GrabFrame(temp);
-				if (!bResult)
-					AfxMessageBox(_T("failed to grab it"));
-				else {
-					cv::imshow("test sample", temp);
-					cv::waitKey(1);
-				}
-
+				cam.showVideo();
 				cam.Close();
 			}
 
@@ -159,16 +223,21 @@ void CSAGEFaceDlg::OnPaint() {
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// 아이콘을 그립니다.
-		dc.DrawIcon(x, y, m_hIcon);
 	} else {
 		CDialogEx::OnPaint();
 	}
 }
 
-// 사용자가 최소화된 창을 끄는 동안에 커서가 표시되도록 시스템에서
-//  이 함수를 호출합니다.
-HCURSOR CSAGEFaceDlg::OnQueryDragIcon() {
-	return static_cast<HCURSOR>(m_hIcon);
-}
 
+void CSAGEFaceDlg::OnDestroy() {
+	CDialogEx::OnDestroy();
+	
+	m_bGrabRun = FALSE;
+
+	if (m_pGrabThread) {
+		WaitForSingleObject(m_pGrabThread->m_hThread, 1000);
+		m_pGrabThread = nullptr;
+	}
+
+	CDialog::OnDestroy();
+}

@@ -13,6 +13,7 @@ public:
     bool IsOpened() const;
     
     bool GrabFrame(cv::Mat& frame);
+    bool showVideo();
 
 private:
     cv::VideoCapture m_vcCapture;

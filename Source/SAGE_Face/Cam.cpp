@@ -41,10 +41,6 @@ bool Cam::Open(int index, int width, int height, double fps) {
 		return false;
 	}
 
-	//m_vcCapture.set(cv::CAP_PROP_FRAME_WIDTH, width);
-	//m_vcCapture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-	//m_vcCapture.set(cv::CAP_PROP_FPS, fps);
-
 	return m_vcCapture.isOpened();
 }
 
@@ -61,9 +57,25 @@ bool Cam::GrabFrame(cv::Mat& frame) {
 	if (!m_vcCapture.isOpened())
 		return false;
 
-	//m_vcCapture >> frame;
-	//cv::imshow("test sample", frame);
-	//cv::waitKey(1);
-
 	return m_vcCapture.read(frame);
+}
+
+bool Cam::showVideo() {
+	cv::Mat frame;
+	while (m_vcCapture.isOpened()) {
+		if (!GrabFrame(frame)) {
+			AfxMessageBox(_T("failed to grab frame"));
+			break;
+		}
+
+		cv::imshow("video test", frame);
+
+		int key = cv::waitKey(1);
+		if (key == CV_ESC) {
+			AfxMessageBox(_T("stop video")); 
+			break;
+		}
+	}
+
+	return true;
 }
