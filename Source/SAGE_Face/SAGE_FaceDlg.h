@@ -33,9 +33,10 @@ protected:
 
 protected:
 	static UINT		GrabThreadProc(LPVOID pParam);
-	afx_msg LRESULT OnUpdateFrame(WPARAM wParam, LPARAM lParam);
 	void			DrawMatToPicture(const cv::Mat& mat);
-
+	
+	afx_msg LRESULT OnUpdateFrame(WPARAM wParam, LPARAM lParam);
+	afx_msg void	OnBnClickedCamButton();
 
 	// 생성된 메시지 맵 함수
 	virtual BOOL OnInitDialog();

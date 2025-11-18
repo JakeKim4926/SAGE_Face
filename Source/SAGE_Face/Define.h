@@ -19,6 +19,7 @@ constexpr int MIN_HEIGHT = 300;
 constexpr int MIN_FRAME = 1;
 constexpr int MAX_FRAME = 60;
 
+constexpr int CAM_INDEX = 0;
 constexpr int CAM_WIDTH = 1920;
 constexpr int CAM_HEIGHT = 1080;
 constexpr int CAM_FPS = 30;

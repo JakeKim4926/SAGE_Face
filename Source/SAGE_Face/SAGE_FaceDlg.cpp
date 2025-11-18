@@ -13,38 +13,7 @@
 #endif
 
 
-// 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
-
-class CAboutDlg : public CDialogEx {
-public:
-	CAboutDlg();
-
-	// 대화 상자 데이터입니다.
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 지원입니다.
-
-	// 구현입니다.
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX) {
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX) {
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-
 // CSAGEFaceDlg 대화 상자
-
 
 
 CSAGEFaceDlg::CSAGEFaceDlg(CWnd* pParent /*=nullptr*/)
@@ -57,11 +26,14 @@ void CSAGEFaceDlg::DoDataExchange(CDataExchange* pDX) {
 }
 
 BEGIN_MESSAGE_MAP(CSAGEFaceDlg, CDialogEx)
+	ON_MESSAGE(WM_UPDATE_FRAME, &CSAGEFaceDlg::OnUpdateFrame)
+
+	ON_BN_CLICKED(IDC_BUTTON_CAM_OPEN, &CSAGEFaceDlg::OnBnClickedCamButton)
+	ON_BN_CLICKED(IDC_BUTTON_CAM_CLOSE, &CSAGEFaceDlg::OnBnClickedCamButton)
+
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-
-	ON_MESSAGE(WM_UPDATE_FRAME, &CSAGEFaceDlg::OnUpdateFrame)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
@@ -71,15 +43,6 @@ END_MESSAGE_MAP()
 
 BOOL CSAGEFaceDlg::OnInitDialog() {
 	CDialogEx::OnInitDialog();
-
-	bool bOpen = m_cam.Open(0, CAM_WIDTH, CAM_HEIGHT, CAM_FPS);
-	if (!bOpen) {
-		AfxMessageBox(_T("Failed to connect cam"));
-	} else {
-		m_bGrabRun = TRUE;
-		m_pGrabThread = AfxBeginThread(GrabThreadProc, this);
-	}
-
 
 	return TRUE;
 }
@@ -144,6 +107,32 @@ void CSAGEFaceDlg::DrawMatToPicture(const cv::Mat& mat) {
 	);
 }
 
+void CSAGEFaceDlg::OnBnClickedCamButton()
+{
+	UINT nID = GetCurrentMessage()->wParam;
+	switch (nID)
+	{
+		case IDC_BUTTON_CAM_OPEN:
+			if (!m_cam.Open(CAM_INDEX, CAM_WIDTH, CAM_HEIGHT, CAM_FPS)) {
+				AfxMessageBox(_T("Failed to connect cam"));
+			} else {
+				m_bGrabRun = TRUE;
+				m_pGrabThread = AfxBeginThread(GrabThreadProc, this);
+			}
+
+			break;
+
+		case IDC_BUTTON_CAM_CLOSE:
+			m_bGrabRun = FALSE;
+			if (m_pGrabThread) {
+				WaitForSingleObject(m_pGrabThread->m_hThread, 1000);
+				m_pGrabThread = nullptr;
+				m_cam.Close();
+			}
+			break;
+	}
+}
+
 LRESULT CSAGEFaceDlg::OnUpdateFrame(WPARAM wParam, LPARAM lParam) {
 	cv::Mat frameCopy;
 
@@ -153,13 +142,6 @@ LRESULT CSAGEFaceDlg::OnUpdateFrame(WPARAM wParam, LPARAM lParam) {
 			return 0;
 		m_frame.copyTo(frameCopy);
 	}
-
-	//int type = frameCopy.type();
-	//int depth = type & CV_MAT_DEPTH_MASK;
-	//int channels = 1 + (type >> CV_CN_SHIFT);
-	//TRACE("frameCopy type=%d, depth=%d, channels=%d, size=%d x %d\n",
-	//	type, depth, channels, frameCopy.cols, frameCopy.rows);
-
 
 	DrawMatToPicture(frameCopy);
 	return 0;
@@ -174,7 +156,8 @@ BOOL CSAGEFaceDlg::PreTranslateMessage(MSG* pMsg) {
 				// OPENCV TEST
 				cv::Mat temp = cv::imread("sample.bmp");
 				cv::imshow("test sample", temp);
-			} else if (pMsg->wParam == 'S') {
+			}
+			else if (pMsg->wParam == 'S') {
 				// CAM TEST
 				Cam cam;
 				bool bResult = cam.Open(0, CAM_WIDTH, CAM_HEIGHT, CAM_FPS);
@@ -190,40 +173,21 @@ BOOL CSAGEFaceDlg::PreTranslateMessage(MSG* pMsg) {
 		}
 	}
 
-	// 나머지는 기본 동작
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
 void CSAGEFaceDlg::OnSysCommand(UINT nID, LPARAM lParam) {
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX) {
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	} else {
-		CDialogEx::OnSysCommand(nID, lParam);
-	}
-}
 
-// 대화 상자에 최소화 단추를 추가할 경우 아이콘을 그리려면
-//  아래 코드가 필요합니다.  문서/뷰 모델을 사용하는 MFC 애플리케이션의 경우에는
-//  프레임워크에서 이 작업을 자동으로 수행합니다.
+	CDialogEx::OnSysCommand(nID, lParam);
+}
 
 void CSAGEFaceDlg::OnPaint() {
 	if (IsIconic()) {
-		CPaintDC dc(this); // 그리기를 위한 디바이스 컨텍스트입니다.
+		CPaintDC dc(this);
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
-
-		// 클라이언트 사각형에서 아이콘을 가운데에 맞춥니다.
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-
-		CRect rect;
-		GetClientRect(&rect);
-
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
-
-	} else {
+	}
+	else {
 		CDialogEx::OnPaint();
 	}
 }
@@ -231,12 +195,13 @@ void CSAGEFaceDlg::OnPaint() {
 
 void CSAGEFaceDlg::OnDestroy() {
 	CDialogEx::OnDestroy();
-	
+
 	m_bGrabRun = FALSE;
 
 	if (m_pGrabThread) {
 		WaitForSingleObject(m_pGrabThread->m_hThread, 1000);
 		m_pGrabThread = nullptr;
+		m_cam.Close();
 	}
 
 	CDialog::OnDestroy();

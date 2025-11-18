@@ -60,6 +60,9 @@
     <ClInclude Include="Define.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="CamGrabber.h">
+      <Filter>헤더 파일\CV</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -75,6 +78,9 @@
       <Filter>소스 파일\CV</Filter>
     </ClCompile>
     <ClCompile Include="Cam.cpp">
+      <Filter>소스 파일\CV</Filter>
+    </ClCompile>
+    <ClCompile Include="CamGrabber.cpp">
       <Filter>소스 파일\CV</Filter>
     </ClCompile>
   </ItemGroup>

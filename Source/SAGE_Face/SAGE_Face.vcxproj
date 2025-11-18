@@ -204,6 +204,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Cam.h" />
+    <ClInclude Include="CamGrabber.h" />
     <ClInclude Include="CVUtils.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="framework.h" />
@@ -215,6 +216,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cam.cpp" />
+    <ClCompile Include="CamGrabber.cpp" />
     <ClCompile Include="CVUtils.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
