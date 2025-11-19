@@ -34,6 +34,7 @@ protected:
 protected:
 	static UINT		GrabThreadProc(LPVOID pParam);
 	void			DrawMatToPicture(const cv::Mat& mat);
+	BOOL			BtnLayout();
 	
 	afx_msg LRESULT OnUpdateFrame(WPARAM wParam, LPARAM lParam);
 	afx_msg void	OnBnClickedCamButton();
@@ -47,4 +48,5 @@ protected:
 public:
 	
 	afx_msg void OnDestroy();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

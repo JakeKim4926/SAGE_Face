@@ -35,6 +35,7 @@ BEGIN_MESSAGE_MAP(CSAGEFaceDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -43,6 +44,19 @@ END_MESSAGE_MAP()
 
 BOOL CSAGEFaceDlg::OnInitDialog() {
 	CDialogEx::OnInitDialog();
+
+	if (::IsWindow(m_picCam.GetSafeHwnd())) {
+		m_picCam.SetWindowPos(
+			nullptr,
+			0, 0,
+			800, 600,
+			SWP_NOMOVE | SWP_NOZORDER
+		);
+	}
+
+	ModifyStyle(WS_THICKFRAME | WS_MAXIMIZEBOX, 0);
+
+	BtnLayout();
 
 	return TRUE;
 }
@@ -107,6 +121,38 @@ void CSAGEFaceDlg::DrawMatToPicture(const cv::Mat& mat) {
 	);
 }
 
+BOOL CSAGEFaceDlg::BtnLayout() {
+
+	if (!::IsWindow(m_picCam.GetSafeHwnd()))
+		return FALSE;
+
+	CRect rcPic;
+	m_picCam.GetWindowRect(&rcPic);
+	ScreenToClient(&rcPic);
+
+	const int btnWidth = 150;
+	const int btnHeight = 40;
+	const int btnGap = 50;
+	const int marginTop = 50;
+
+	int totalWidth = btnWidth * 2 + btnGap;
+	int xStart = rcPic.left + (rcPic.Width() - totalWidth) / 2;
+	int y = rcPic.bottom + marginTop;
+
+	CWnd* pBtnOpen = GetDlgItem(IDC_BUTTON_CAM_OPEN);
+	CWnd* pBtnClose = GetDlgItem(IDC_BUTTON_CAM_CLOSE);
+
+	if (pBtnOpen && ::IsWindow(pBtnOpen->GetSafeHwnd())) {
+		pBtnOpen->MoveWindow(xStart, y, btnWidth, btnHeight);
+	}
+
+	if (pBtnClose && ::IsWindow(pBtnClose->GetSafeHwnd())) {
+		pBtnClose->MoveWindow(xStart + btnWidth + btnGap, y, btnWidth, btnHeight);
+	}
+
+	return TRUE;
+}
+
 void CSAGEFaceDlg::OnBnClickedCamButton()
 {
 	UINT nID = GetCurrentMessage()->wParam;
@@ -129,6 +175,8 @@ void CSAGEFaceDlg::OnBnClickedCamButton()
 				m_pGrabThread = nullptr;
 				m_cam.Close();
 			}
+
+			Invalidate(TRUE);
 			break;
 	}
 }
@@ -205,4 +253,8 @@ void CSAGEFaceDlg::OnDestroy() {
 	}
 
 	CDialog::OnDestroy();
+}
+
+void CSAGEFaceDlg::OnSize(UINT nType, int cx, int cy) {
+	CDialogEx::OnSize(nType, cx, cy);
 }
