@@ -36,6 +36,8 @@ BEGIN_MESSAGE_MAP(CSAGEFaceDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_BUTTON_DETECT, &CSAGEFaceDlg::OnBnClickedButtonDetect)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -55,10 +57,23 @@ BOOL CSAGEFaceDlg::OnInitDialog() {
 	}
 
 	ModifyStyle(WS_THICKFRAME | WS_MAXIMIZEBOX, 0);
+	SetTimer(WM_TIMER_UI_MS, TIMER_MS, NULL);
 
 	BtnLayout();
+	Initialize();
+
+	DumpOpenCVDll();
 
 	return TRUE;
+}
+
+void CSAGEFaceDlg::Initialize() {
+	std::string onnxPath = "jake_yolo.onnx";
+	
+	m_yolo = new Yolo();
+	BOOL bLoaded = m_yolo->LoadModel(onnxPath, FALSE);
+	if (!bLoaded || !m_yolo->IsLoaded())
+		AfxMessageBox(_T("failed to laod .onnx"));
 }
 
 UINT CSAGEFaceDlg::GrabThreadProc(LPVOID pParam) {
@@ -72,6 +87,21 @@ UINT CSAGEFaceDlg::GrabThreadProc(LPVOID pParam) {
 
 		if (localFrame.empty()) {
 			continue;
+		}
+
+
+		if (pDlg->m_bDetectMode && pDlg->m_yolo && pDlg->m_yolo->IsLoaded()) {
+			std::vector<YoloResult> dets;
+			pDlg->m_yolo->Detect(localFrame, dets);
+
+			CString s;
+			s.Format(_T("dets = %d\n"), (int)dets.size());
+			OutputDebugString(s);
+
+			cv::Mat annotated;
+			pDlg->m_yolo->DrawDetections(localFrame, annotated, dets);
+
+			annotated.copyTo(localFrame);
 		}
 
 		//pDlg->m_csFrame.Lock();
@@ -94,27 +124,32 @@ void CSAGEFaceDlg::DrawMatToPicture(const cv::Mat& mat) {
 	if (mat.empty())
 		return;
 
+	cv::Mat bgra;
+	if (mat.channels() == 4) bgra = mat;
+	else if (mat.channels() == 3) cv::cvtColor(mat, bgra, cv::COLOR_BGR2BGRA);
+	else if (mat.channels() == 1) cv::cvtColor(mat, bgra, cv::COLOR_GRAY2BGRA);
+	else return;
+
+	if (!bgra.isContinuous())
+		bgra = bgra.clone();
+
 	CRect rect;
 	m_picCam.GetClientRect(&rect);
-	int dstW = rect.Width();
-	int dstH = rect.Height();
-
 	CClientDC dc(&m_picCam);
 
-	BITMAPINFO bmi;
-	ZeroMemory(&bmi, sizeof(bmi));
+	BITMAPINFO bmi{};
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = mat.cols;
-	bmi.bmiHeader.biHeight = -mat.rows;
+	bmi.bmiHeader.biWidth = bgra.cols;
+	bmi.bmiHeader.biHeight = -bgra.rows;
 	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 24;
+	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
 	StretchDIBits(
 		dc.GetSafeHdc(),
-		0, 0, dstW, dstH,
-		0, 0, mat.cols, mat.rows,
-		mat.data,
+		0, 0, rect.Width(), rect.Height(),
+		0, 0, bgra.cols, bgra.rows,
+		bgra.data,
 		&bmi,
 		DIB_RGB_COLORS,
 		SRCCOPY
@@ -141,6 +176,7 @@ BOOL CSAGEFaceDlg::BtnLayout() {
 
 	CWnd* pBtnOpen = GetDlgItem(IDC_BUTTON_CAM_OPEN);
 	CWnd* pBtnClose = GetDlgItem(IDC_BUTTON_CAM_CLOSE);
+	CWnd* pBtnDetect = GetDlgItem(IDC_BUTTON_DETECT);
 
 	if (pBtnOpen && ::IsWindow(pBtnOpen->GetSafeHwnd())) {
 		pBtnOpen->MoveWindow(xStart, y, btnWidth, btnHeight);
@@ -148,6 +184,12 @@ BOOL CSAGEFaceDlg::BtnLayout() {
 
 	if (pBtnClose && ::IsWindow(pBtnClose->GetSafeHwnd())) {
 		pBtnClose->MoveWindow(xStart + btnWidth + btnGap, y, btnWidth, btnHeight);
+	}
+
+	if (pBtnDetect && ::IsWindow(pBtnDetect->GetSafeHwnd())) {
+		int xDetect = xStart + (totalWidth - btnWidth) / 2;
+		int yDetect = y + btnHeight + 50;
+		pBtnDetect->MoveWindow(xDetect, yDetect, btnWidth, btnHeight);
 	}
 
 	return TRUE;
@@ -245,16 +287,36 @@ void CSAGEFaceDlg::OnDestroy() {
 	CDialogEx::OnDestroy();
 
 	m_bGrabRun = FALSE;
+	m_bDetectMode = FALSE;
+	
+	m_cam.Close();
 
 	if (m_pGrabThread) {
 		WaitForSingleObject(m_pGrabThread->m_hThread, 1000);
 		m_pGrabThread = nullptr;
-		m_cam.Close();
 	}
+
+	KillTimer(WM_TIMER_UI_MS);
+
+	delete m_yolo;
 
 	CDialog::OnDestroy();
 }
 
 void CSAGEFaceDlg::OnSize(UINT nType, int cx, int cy) {
 	CDialogEx::OnSize(nType, cx, cy);
+}
+
+void CSAGEFaceDlg::OnBnClickedButtonDetect() {
+	m_bDetectMode = !m_bDetectMode;
+}
+
+void CSAGEFaceDlg::OnTimer(UINT_PTR nIDEvent) {
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (nIDEvent == WM_TIMER_UI_MS) {
+		if(m_bDetectMode)		GetDlgItem(IDC_BUTTON_DETECT)->SetWindowText(_T("DETECT OFF"));
+		else					GetDlgItem(IDC_BUTTON_DETECT)->SetWindowText(_T("DETECT ON"));
+	}
+
+	CDialogEx::OnTimer(nIDEvent);
 }

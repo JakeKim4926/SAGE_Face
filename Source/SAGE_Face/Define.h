@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------
 
 constexpr auto WM_UPDATE_FRAME = 3333;
+constexpr auto WM_TIMER_UI_MS = 10001;
 
 //----------------------------------------------------------------------------------------------
 // OPENCV
@@ -23,3 +24,5 @@ constexpr int CAM_INDEX = 0;
 constexpr int CAM_WIDTH = 1920;
 constexpr int CAM_HEIGHT = 1080;
 constexpr int CAM_FPS = 30;
+
+constexpr int TIMER_MS = 300;

@@ -63,6 +63,9 @@
     <ClInclude Include="CamGrabber.h">
       <Filter>헤더 파일\CV</Filter>
     </ClInclude>
+    <ClInclude Include="Yolo.h">
+      <Filter>헤더 파일\CV</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -81,6 +84,9 @@
       <Filter>소스 파일\CV</Filter>
     </ClCompile>
     <ClCompile Include="CamGrabber.cpp">
+      <Filter>소스 파일\CV</Filter>
+    </ClCompile>
+    <ClCompile Include="Yolo.cpp">
       <Filter>소스 파일\CV</Filter>
     </ClCompile>
   </ItemGroup>

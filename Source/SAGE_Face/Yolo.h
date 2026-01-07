@@ -15,15 +15,11 @@ class Yolo {
 public:
     Yolo();
 
-    bool LoadModel(const std::string& onnxPath, bool useCuda = false);
+    BOOL    LoadModel(const std::string& onnxPath, BOOL useCuda = FALSE);
+    BOOL    IsLoaded() const { return m_bLoaded; }
 
-    bool IsLoaded() const { return m_bLoaded; }
-
-    void Detect(const cv::Mat& image, std::vector<YoloResult>& results,float confThreshold = 0.25f, float nmsThreshold = 0.45f);
-
-    void DrawDetections(const cv::Mat& image,
-        cv::Mat& output,
-        const std::vector<YoloResult>& results);
+    void    Detect(const cv::Mat& image, std::vector<YoloResult>& results,float confThreshold = 0.25f, float nmsThreshold = 0.45f);
+    void    DrawDetections(const cv::Mat& image, cv::Mat& output, const std::vector<YoloResult>& results);
 
 private:
     cv::dnn::Net m_net;

@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "Yolo.h"
-
-#include "Yolo.h"
 #include <algorithm>
 #include <cmath>
 
@@ -11,10 +9,10 @@ Yolo::Yolo()
     , m_nInputH(640)
     , m_nNumClasses(80)
 {
-
+    //OutputDebugStringA(cv::getBuildInformation().c_str());
 }
 
-bool Yolo::LoadModel(const std::string& onnxPath, bool useCuda) {
+BOOL Yolo::LoadModel(const std::string& onnxPath, BOOL useCuda) {
     try {
         m_net = cv::dnn::readNetFromONNX(onnxPath);
 
@@ -39,53 +37,67 @@ void Yolo::Detect(const cv::Mat& image,
     std::vector<YoloResult>& results,
     float confThreshold,
     float nmsThreshold) {
-    results.clear();
+    try {
+        results.clear();
 
-    if (!m_bLoaded || image.empty())
+        char buf[128];
+        sprintf_s(buf, "img type=%d, ch=%d, size=%dx%d\n",
+        image.type(), image.channels(), image.cols, image.rows);
+        OutputDebugStringA(buf);
+
+        if (!m_bLoaded || image.empty())
+            return;
+
+        cv::Mat bgr;
+        if (image.channels() == 4)      cv::cvtColor(image, bgr, cv::COLOR_BGRA2BGR);
+        else if (image.channels() == 1) cv::cvtColor(image, bgr, cv::COLOR_GRAY2BGR);
+        else if (image.channels() == 3) bgr = image;
+        else return;
+
+        if (bgr.depth() != CV_8U) {
+            // 필요하면 스케일 조정해야 하지만, 보통 카메라는 8U라 convert만
+            bgr.convertTo(bgr, CV_8U);
+        }
+
+        // 1. blob 생성
+        cv::Mat blob;
+        cv::dnn::blobFromImage(
+            bgr, blob,
+            1.0 / 255.0,
+            cv::Size(m_nInputW, m_nInputH),
+            cv::Scalar(),
+            true,   // BGR->RGB
+            false
+        );
+
+        m_net.setInput(blob);
+
+        // 2. forward
+        std::vector<cv::Mat> outputs;
+        std::vector<cv::String> outNames = m_net.getUnconnectedOutLayersNames();
+        m_net.forward(outputs, outNames);
+
+        if (outputs.empty()) return;
+
+        cv::Mat out = outputs[0];
+        if (out.empty()) return;
+        if (!out.isContinuous()) out = out.clone();
+
+        std::vector<cv::Rect> boxes;
+        std::vector<float> confidences;
+        std::vector<int> classIds;
+
+        ParseDetections(out, confThreshold, bgr.cols, bgr.rows, boxes, confidences, classIds);
+
+        std::vector<int> indices;
+        cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
+
+        for (int idx : indices) {
+            results.push_back({ boxes[idx], classIds[idx], confidences[idx] });
+        }
+    } catch (cv::Exception ex) {
+        OutputDebugStringA(ex.what());
         return;
-
-    // 1. blob 생성
-    cv::Mat blob;
-    cv::dnn::blobFromImage(
-        image,
-        blob,
-        1.0 / 255.0,
-        cv::Size(m_nInputW, m_nInputH),
-        cv::Scalar(),
-        true,   // bgr => rgb
-        false
-    );
-
-    m_net.setInput(blob);
-
-    // 2. forward
-    std::vector<cv::Mat> outputs;
-    m_net.forward(outputs);
-
-    if (outputs.empty())
-        return;
-
-    cv::Mat out = outputs[0];
-
-    std::vector<cv::Rect> boxes;
-    std::vector<float> confidences;
-    std::vector<int> classIds;
-
-    ParseDetections(out, confThreshold,
-        image.cols, image.rows,
-        boxes, confidences, classIds);
-
-    // 3. NMS
-    std::vector<int> indices;
-    cv::dnn::NMSBoxes(boxes, confidences,
-        confThreshold, nmsThreshold, indices);
-
-    for (int idx : indices) {
-        YoloResult r;
-        r.box = boxes[idx];
-        r.classId = classIds[idx];
-        r.confidence = confidences[idx];
-        results.push_back(r);
     }
 }
 

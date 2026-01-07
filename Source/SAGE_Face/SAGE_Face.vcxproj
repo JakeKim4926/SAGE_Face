@@ -213,6 +213,7 @@
     <ClInclude Include="SAGE_Face.h" />
     <ClInclude Include="SAGE_FaceDlg.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Yolo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cam.cpp" />
@@ -226,6 +227,7 @@
     </ClCompile>
     <ClCompile Include="SAGE_Face.cpp" />
     <ClCompile Include="SAGE_FaceDlg.cpp" />
+    <ClCompile Include="Yolo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SAGEFace.rc" />

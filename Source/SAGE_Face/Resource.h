@@ -9,6 +9,7 @@
 #define IDC_STATIC_CAM                  1000
 #define IDC_BUTTON_CAM_OPEN             10001
 #define IDC_BUTTON_CAM_CLOSE            10002
+#define IDC_BUTTON_DETECT               10003
 
 // Next default values for new objects
 // 

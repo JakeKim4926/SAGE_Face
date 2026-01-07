@@ -18,6 +18,22 @@
 #include <algorithm>
 #include <vector>
 
+#include <windows.h>
+
+static void DumpOpenCVDll() {
+    HMODULE h = GetModuleHandleW(L"opencv_world4110d.dll");
+    if (!h) h = GetModuleHandleW(L"opencv_world4110.dll");
+
+    wchar_t path[MAX_PATH]{};
+    if (h && GetModuleFileNameW(h, path, MAX_PATH)) {
+        OutputDebugStringW(L"[OpenCV DLL] ");
+        OutputDebugStringW(path);
+        OutputDebugStringW(L"\n");
+    } else {
+        OutputDebugStringW(L"[OpenCV DLL] NOT LOADED YET\n");
+    }
+}
+
 //----------------------------------------------------------------------------------------------
 // Opencv v4.11
 //----------------------------------------------------------------------------------------------

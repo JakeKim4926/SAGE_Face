@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "Yolo.h"
 
 // CSAGEFaceDlg 대화 상자
 class CSAGEFaceDlg : public CDialogEx
@@ -31,6 +31,13 @@ protected:
 	cv::Mat			 m_frame;
 	CCriticalSection m_csFrame;
 
+	BOOL			 m_bDetectMode;
+
+	Yolo*			 m_yolo;
+
+public:
+	void Initialize();
+
 protected:
 	static UINT		GrabThreadProc(LPVOID pParam);
 	void			DrawMatToPicture(const cv::Mat& mat);
@@ -49,4 +56,6 @@ public:
 	
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnBnClickedButtonDetect();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
